@@ -71,19 +71,20 @@ namespace Спроба1
                 try
                 {
                     conn.Open();
-                    string query = @"SELECT m.category_menu, m.price_menu, m.calories_menu, GROUP_CONCAT(p.name_products SEPARATOR ', ') as ingredients 
-                                    FROM menu m 
-                                    INNER JOIN menu_and_products mp ON m.id_menu = mp.id_menu
-                                    INNER JOIN products p ON mp.id_products = p.id_products
-                                    WHERE m.name_menu = @menuName
-                                    GROUP BY m.category_menu, m.price_menu, m.calories_menu";
+                    string query = @"SELECT c.category_name, m.price_menu, m.calories_menu, GROUP_CONCAT(p.name_products SEPARATOR ', ') as ingredients 
+                            FROM menu m 
+                            INNER JOIN category c ON m.id_category = c.id_category
+                            INNER JOIN menu_and_products mp ON m.id_menu = mp.id_menu
+                            INNER JOIN products p ON mp.id_products = p.id_products
+                            WHERE m.name_menu = @menuName
+                            GROUP BY c.category_name, m.price_menu, m.calories_menu";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@menuName", selectedMenuName);
                     MySqlDataReader reader = cmd.ExecuteReader();
 
                     if (reader.Read())
                     {
-                        textBox_category.Text = reader["category_menu"].ToString();
+                        textBox_category.Text = reader["category_name"].ToString();
                         textBox_price.Text = reader["price_menu"].ToString();
                         textBox_calories.Text = reader["calories_menu"].ToString();
                         textBox_ingridients.Text = reader["ingredients"].ToString();
@@ -233,18 +234,19 @@ namespace Спроба1
             {
                 conn.Open();
                 string query = @"SELECT o.id_orders_in_anticipation AS `№ замовлення`,
-                                m.name_menu AS `Назва`,
-                                m.category_menu AS `Категорія`,
-                                m.price_menu AS `Ціна`,
-                                GROUP_CONCAT(DISTINCT p.name_products SEPARATOR ', ') AS `Склад`,
-                                o.date_orders_in_anticipation AS `Дата та час замовлення`
-                                FROM orders_in_anticipation o
-                                INNER JOIN menu m ON o.menu_id_menu = m.id_menu
-                                LEFT JOIN menu_and_products mp ON m.id_menu = mp.id_menu
-                                LEFT JOIN products p ON mp.id_products = p.id_products
-                                WHERE o.client_id_client = @clientId
-                                GROUP BY o.id_orders_in_anticipation, m.name_menu, m.category_menu, 
-                                m.price_menu, o.date_orders_in_anticipation";
+                        m.name_menu AS `Назва`,
+                        c.category_name AS `Категорія`,
+                        m.price_menu AS `Ціна`,
+                        GROUP_CONCAT(DISTINCT p.name_products SEPARATOR ', ') AS `Склад`,
+                        o.date_orders_in_anticipation AS `Дата та час замовлення`
+                        FROM orders_in_anticipation o
+                        INNER JOIN menu m ON o.menu_id_menu = m.id_menu
+                        INNER JOIN category c ON m.id_category = c.id_category
+                        LEFT JOIN menu_and_products mp ON m.id_menu = mp.id_menu
+                        LEFT JOIN products p ON mp.id_products = p.id_products
+                        WHERE o.client_id_client = @clientId
+                        GROUP BY o.id_orders_in_anticipation, m.name_menu, c.category_name, 
+                        m.price_menu, o.date_orders_in_anticipation";
                 MySqlCommand cmd = new MySqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@clientId", GlobalVariables.ClientId);
 

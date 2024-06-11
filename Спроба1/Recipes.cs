@@ -32,12 +32,13 @@ namespace Спроба1
             try
             {
                 conn.Open();
-                string query = @"SELECT r.id_recipes, r.name_recipes, r.category_recipes, r.calories_recipes, r.cooking_instructions, r.image_recipes, 
+                string query = @"SELECT r.id_recipes, r.name_recipes, c.category_name, r.calories_recipes, r.cooking_instructions, r.image_recipes, 
 							GROUP_CONCAT(p.name_products SEPARATOR ', ') AS sklad
 							FROM recipes r
 							LEFT JOIN products_and_recipes par ON r.id_recipes = par.id_recipes
 							LEFT JOIN products p ON par.id_products = p.id_products
-							GROUP BY r.id_recipes, r.name_recipes, r.category_recipes, r.calories_recipes, r.cooking_instructions, r.image_recipes;";
+                            LEFT JOIN category c ON r.id_category = c.id_category
+							GROUP BY r.id_recipes, r.name_recipes, c.category_name, r.calories_recipes, r.cooking_instructions, r.image_recipes;";
 
                 MySqlCommand cmd = new MySqlCommand(query, conn);
                 MySqlDataReader reader = cmd.ExecuteReader();
@@ -84,7 +85,7 @@ namespace Спроба1
                     groupBox.Controls.Add(nameLabel);
 
                     Label categoryLabel = new Label();
-                    categoryLabel.Text = "Категорія: " + reader["category_recipes"].ToString();
+                    categoryLabel.Text = "Категорія: " + reader["category_name"].ToString();
                     categoryLabel.Location = new Point(290, 50);
                     categoryLabel.Font = labelFont;
                     categoryLabel.AutoSize = true;

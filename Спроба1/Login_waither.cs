@@ -30,13 +30,14 @@ namespace Спроба1
             {
                 conn.Open();
                 string query = @"SELECT o.id_orders_in_anticipation AS `ID Замовлення`, o.menu_id_menu AS `ID Меню`, 
-                                m.name_menu AS `Назва`, m.category_menu AS `Категорія`, m.price_menu AS `Ціна`, 
-                                o.client_id_client AS `ID Клієнта`, c.name_client AS `Ім'я`, c.surname_client AS `Прізвище`, 
-                                c.login_client AS `Логін`, c.phone_number AS `Телефон`, 
+                                m.name_menu AS `Назва`, c.category_name AS `Категорія`, m.price_menu AS `Ціна`, 
+                                o.client_id_client AS `ID Клієнта`, cl.name_client AS `Ім'я`, cl.surname_client AS `Прізвище`, 
+                                cl.login_client AS `Логін`, cl.phone_number AS `Телефон`, 
                                 o.date_orders_in_anticipation AS `Дата замовлення`
                                 FROM orders_in_anticipation o
-                                INNER JOIN client c ON o.client_id_client = c.id_client
-                                INNER JOIN menu m ON o.menu_id_menu = m.id_menu";
+                                INNER JOIN client cl ON o.client_id_client = cl.id_client
+                                INNER JOIN menu m ON o.menu_id_menu = m.id_menu
+                                INNER JOIN category c ON m.id_category = c.id_category";
 
                 MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn);
                 DataTable table = new DataTable();
@@ -125,6 +126,11 @@ namespace Спроба1
             {
                 conn.Close();
             }
+        }
+
+        private void dataGridView_waither_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
         }
     }
 }

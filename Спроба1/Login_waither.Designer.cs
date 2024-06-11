@@ -74,6 +74,7 @@
             this.dataGridView_waither.RowTemplate.Height = 24;
             this.dataGridView_waither.Size = new System.Drawing.Size(1097, 279);
             this.dataGridView_waither.TabIndex = 1;
+            this.dataGridView_waither.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_waither_CellContentClick);
             // 
             // label2
             // 

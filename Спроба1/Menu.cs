@@ -32,12 +32,13 @@ namespace Спроба1
             try
             {
                 conn.Open();
-                string query = @"SELECT m.id_menu, m.name_menu, m.category_menu, m.price_menu, m.calories_menu, m.image_menu, 
+                string query = @"SELECT m.id_menu, m.name_menu, c.category_name, m.price_menu, m.calories_menu, m.image_menu, 
                                  GROUP_CONCAT(p.name_products SEPARATOR ', ') AS sklad
                                  FROM menu m
                                  LEFT JOIN menu_and_products mp ON m.id_menu = mp.id_menu
                                  LEFT JOIN products p ON mp.id_products = p.id_products
-                                 GROUP BY m.id_menu, m.name_menu, m.category_menu, m.price_menu, m.calories_menu, m.image_menu";
+                                 LEFT JOIN category c ON m.id_category = c.id_category
+                                 GROUP BY m.id_menu, m.name_menu, c.category_name, m.price_menu, m.calories_menu, m.image_menu";
 
                 MySqlCommand cmd = new MySqlCommand(query, conn);
                 MySqlDataReader reader = cmd.ExecuteReader();
@@ -84,7 +85,7 @@ namespace Спроба1
                     groupBox.Controls.Add(nameLabel);
 
                     Label categoryLabel = new Label();
-                    categoryLabel.Text = "Категорія: " + reader["category_menu"].ToString();
+                    categoryLabel.Text = "Категорія: " + reader["category_name"].ToString();
                     categoryLabel.Location = new Point(240, 50);
                     categoryLabel.Font = labelFont;
                     categoryLabel.AutoSize = true;

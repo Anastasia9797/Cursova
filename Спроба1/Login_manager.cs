@@ -819,15 +819,22 @@ namespace Спроба1
             try
             {
                 conn.Open();
-                string query = @"SELECT o.id_orders_in_anticipation AS `ID Замовлення`, o.menu_id_menu AS `ID Меню`, 
-                m.name_menu AS `Назва страви`, m.category_menu AS `Категорія`, m.price_menu AS `Ціна`,
-                o.client_id_client AS `ID Клієнта`, c.name_client AS `Ім'я`, c.surname_client AS `Прізвище`, 
-                c.login_client AS `Логін`, c.phone_number AS `Телефон`, o.date_orders_in_anticipation AS `Дата замовлення`
-                FROM orders_in_anticipation o
-			    INNER JOIN client c ON o.client_id_client = c.id_client
-                INNER JOIN menu m ON o.menu_id_menu = m.id_menu
-                ORDER BY o.id_orders_in_anticipation";
-
+                string query = @"SELECT o.id_orders_in_anticipation AS `ID Замовлення`, 
+                                o.menu_id_menu AS `ID Меню`, 
+                                m.name_menu AS `Назва страви`, 
+                                cat.category_name AS `Категорія`, 
+                                m.price_menu AS `Ціна`,
+                                o.client_id_client AS `ID Клієнта`, 
+                                cl.name_client AS `Ім'я`, 
+                                cl.surname_client AS `Прізвище`, 
+                                cl.login_client AS `Логін`, 
+                                cl.phone_number AS `Телефон`, 
+                                o.date_orders_in_anticipation AS `Дата замовлення`
+                                FROM orders_in_anticipation o
+                                INNER JOIN client cl ON o.client_id_client = cl.id_client
+                                INNER JOIN menu m ON o.menu_id_menu = m.id_menu
+                                LEFT JOIN category cat ON m.id_category = cat.id_category
+                                ORDER BY o.id_orders_in_anticipation";
                 MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn);
                 DataTable table = new DataTable();
                 adapter.Fill(table);
@@ -849,30 +856,30 @@ namespace Спроба1
             try
             {
                 conn.Open();
-                string query = @"SELECT 
-                oc.id_orders_completed AS `ID Замовлення`, 
-                oc.menu_id_menu AS `ID Меню`, 
-                m.name_menu AS `Назва страви`, 
-                m.category_menu AS `Категорія`, 
-                m.price_menu AS `Ціна`, 
-                m.calories_menu AS `Калорійність`,
-                oc.client_id_client AS `ID Клієнта`, 
-                c.login_client AS `Логін клієнта`, 
-                c.name_client AS `Ім'я клієнта`, 
-                c.surname_client AS `Прізвище клієнта`, 
-                c.phone_number AS `Телефон клієнта`, 
-                oc.id_employees AS `ID Офіціанта`,
-                e.login_employees AS `Логін офіціанта`, 
-                e.name_employees AS `Ім'я офіціанта`, 
-                e.surname_employees AS `Прізвище офіціанта`, 
-                e.phone_number AS `Телефон офіціанта`, 
-                oc.date_orders_in_anticipation AS `Дата замовлення`,
-                oc.date_order_complited AS `Дата виконання`
-                FROM orders_completed oc
-                INNER JOIN client c ON oc.client_id_client = c.id_client
-                INNER JOIN menu m ON oc.menu_id_menu = m.id_menu
-                INNER JOIN employees e ON oc.id_employees = e.id_employees
-                order by oc.id_orders_completed;";
+                string query = @"SELECT oc.id_orders_completed AS `ID Замовлення`, 
+                                oc.menu_id_menu AS `ID Меню`, 
+                                m.name_menu AS `Назва страви`, 
+                                c.category_name AS `Категорія`, 
+                                m.price_menu AS `Ціна`, 
+                                m.calories_menu AS `Калорійність`,
+                                oc.client_id_client AS `ID Клієнта`, 
+                                cl.login_client AS `Логін клієнта`, 
+                                cl.name_client AS `Ім'я клієнта`, 
+                                cl.surname_client AS `Прізвище клієнта`, 
+                                cl.phone_number AS `Телефон клієнта`, 
+                                oc.id_employees AS `ID Офіціанта`,
+                                e.login_employees AS `Логін офіціанта`, 
+                                e.name_employees AS `Ім'я офіціанта`, 
+                                e.surname_employees AS `Прізвище офіціанта`, 
+                                e.phone_number AS `Телефон офіціанта`, 
+                                oc.date_orders_in_anticipation AS `Дата замовлення`,
+                                oc.date_order_complited AS `Дата виконання`
+                                FROM orders_completed oc
+                                INNER JOIN client cl ON oc.client_id_client = cl.id_client
+                                INNER JOIN menu m ON oc.menu_id_menu = m.id_menu
+                                LEFT JOIN category c ON m.id_category = c.id_category
+                                INNER JOIN employees e ON oc.id_employees = e.id_employees
+                                ORDER BY oc.id_orders_completed";
 
                 MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn);
                 DataTable table = new DataTable();
@@ -1017,6 +1024,11 @@ namespace Спроба1
             try
             {
                 conn.Open();
+                //беремо id категорії
+                string getCategoryIDQuery = "SELECT id_category FROM category WHERE category_name = @category_name";
+                MySqlCommand getCategoryIDCmd = new MySqlCommand(getCategoryIDQuery, conn);
+                getCategoryIDCmd.Parameters.AddWithValue("@category_name", category_recipe);
+                int categoryId = Convert.ToInt32(getCategoryIDCmd.ExecuteScalar());
 
                 //чи існує такий рецепт
                 string checkRecipeQuery = "SELECT COUNT(*) FROM recipes WHERE name_recipes = @name";
@@ -1029,14 +1041,14 @@ namespace Спроба1
                     return;
                 }
                 // додавання рецепта
-                string insertRecipeQuery = "INSERT INTO recipes (name_recipes, category_recipes, cooking_instructions, calories_recipes, image_recipes) " +
-                                           "VALUES (@name, @category, @instructions, @calories, @image)";
+                string insertRecipeQuery = "INSERT INTO recipes (name_recipes, cooking_instructions, calories_recipes, image_recipes, id_category) " +
+                                   "VALUES (@name, @instructions, @calories, @image, @categoryId)";
                 MySqlCommand cmd = new MySqlCommand(insertRecipeQuery, conn);
                 cmd.Parameters.AddWithValue("@name", name);
-                cmd.Parameters.AddWithValue("@category", category_recipe);
                 cmd.Parameters.AddWithValue("@instructions", instructions);
                 cmd.Parameters.AddWithValue("@calories", calories);
                 cmd.Parameters.AddWithValue("@image", imagePath);
+                cmd.Parameters.AddWithValue("@categoryId", categoryId);
                 cmd.ExecuteNonQuery();
 
                 int recipeId = (int)cmd.LastInsertedId;
@@ -1113,10 +1125,18 @@ namespace Спроба1
                     {
                         id_r.Text = reader["id_recipes"].ToString();
                         name_de_r.Text = reader["name_recipes"].ToString();
-                        comboBox_cat_de_r.SelectedItem = reader["category_recipes"].ToString();
                         textBox_calories_de_r.Text = reader["calories_recipes"].ToString();
                         instruction_de_r.Text = reader["cooking_instructions"].ToString();
                         imagine_de_r.Text = reader["image_recipes"].ToString();
+                        int categoryId = Convert.ToInt32(reader["id_category"]);
+                        reader.Close();
+
+                        // отримання назви категорії
+                        query = "SELECT category_name FROM category WHERE id_category = @id_category";
+                        cmd = new MySqlCommand(query, conn);
+                        cmd.Parameters.AddWithValue("@id_category", categoryId);
+                        string categoryName = cmd.ExecuteScalar().ToString();
+                        comboBox_cat_de_r.SelectedItem = categoryName;
                     }
                     reader.Close();
                     // вивід продуктів, які входять до складу рецепту
@@ -1202,25 +1222,32 @@ namespace Спроба1
             {
                 conn.Open();
 
-                string updateRecipeQuery = "UPDATE recipes SET name_recipes = @name, category_recipes = @category, " +
+                //отримання id категорії
+                string getCategoryIDQuery = "SELECT id_category FROM category WHERE category_name = @category_name";
+                MySqlCommand getCategoryIDCmd = new MySqlCommand(getCategoryIDQuery, conn);
+                getCategoryIDCmd.Parameters.AddWithValue("@category_name", category_recipe);
+                int categoryId = Convert.ToInt32(getCategoryIDCmd.ExecuteScalar());
+
+                //оновлення рецепту
+                string updateRecipeQuery = "UPDATE recipes SET name_recipes = @name, id_category = @category, " +
                                            "cooking_instructions = @instructions, calories_recipes = @calories, image_recipes = @image " +
                                            "WHERE id_recipes = @recipeId";
                 MySqlCommand cmd = new MySqlCommand(updateRecipeQuery, conn);
                 cmd.Parameters.AddWithValue("@name", name);
-                cmd.Parameters.AddWithValue("@category", category_recipe);
+                cmd.Parameters.AddWithValue("@category", categoryId);
                 cmd.Parameters.AddWithValue("@instructions", instructions);
                 cmd.Parameters.AddWithValue("@calories", calories);
                 cmd.Parameters.AddWithValue("@image", imagePath);
                 cmd.Parameters.AddWithValue("@recipeId", recipeId);
                 cmd.ExecuteNonQuery();
 
-                // Видалення старих складників рецепту
+                // видалення старих складників рецепту
                 string deleteIngredientsQuery = "DELETE FROM products_and_recipes WHERE id_recipes = @recipeId";
                 cmd = new MySqlCommand(deleteIngredientsQuery, conn);
                 cmd.Parameters.AddWithValue("@recipeId", recipeId);
                 cmd.ExecuteNonQuery();
 
-                // Додавання нових складників до таблиці products_and_recipes
+                // додавання нових складників до таблиці products_and_recipes
                 foreach (var item in listBox4.Items)
                 {
                     string getProductIdQuery = "SELECT id_products FROM products WHERE name_products = @name";
@@ -1522,13 +1549,19 @@ namespace Спроба1
                     return;
                 }
 
-                string insertMenuQuery = "INSERT INTO menu (name_menu, category_menu, price_menu, calories_menu, image_menu) VALUES (@name, @category, @price, @calories, @image)";
+                // отримання id категорії
+                string getCategoryIdQuery = "SELECT id_category FROM category WHERE category_name = @category_name";
+                MySqlCommand getCategoryIdCmd = new MySqlCommand(getCategoryIdQuery, conn);
+                getCategoryIdCmd.Parameters.AddWithValue("@category_name", category);
+                int categoryId = Convert.ToInt32(getCategoryIdCmd.ExecuteScalar());
+
+                string insertMenuQuery = "INSERT INTO menu (name_menu, price_menu, calories_menu, image_menu, id_category) VALUES (@name, @price, @calories, @image, @categoryId)";
                 MySqlCommand cmd = new MySqlCommand(insertMenuQuery, conn);
                 cmd.Parameters.AddWithValue("@name", name);
-                cmd.Parameters.AddWithValue("@category", category);
                 cmd.Parameters.AddWithValue("@price", price);
                 cmd.Parameters.AddWithValue("@calories", calories);
                 cmd.Parameters.AddWithValue("@image", image);
+                cmd.Parameters.AddWithValue("@categoryId", categoryId);
                 cmd.ExecuteNonQuery();
 
                 int menuId = (int)cmd.LastInsertedId;
@@ -1645,7 +1678,7 @@ namespace Спроба1
 
         //завантаження меню 
         private void comboBox_de_menu_SelectedIndexChanged(object sender, EventArgs e)
-            {
+        {
             if (comboBox_de_menu.SelectedIndex != -1)
             {
                 string selectedMenu = comboBox_de_menu.SelectedItem.ToString();
@@ -1653,7 +1686,9 @@ namespace Спроба1
                 try
                 {
                     conn.Open();
-                    string query = "SELECT * FROM menu WHERE name_menu = @name";
+                    string query = "SELECT m.*, c.category_name FROM menu m " +
+                                   "INNER JOIN category c ON m.id_category = c.id_category " +
+                                   "WHERE m.name_menu = @name";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@name", selectedMenu);
                     MySqlDataReader reader = cmd.ExecuteReader();
@@ -1661,7 +1696,7 @@ namespace Спроба1
                     {
                         id_de_menu.Text = reader["id_menu"].ToString();
                         name_de_menu.Text = reader["name_menu"].ToString();
-                        comboBox_cat_de_menu.SelectedItem = reader["category_menu"].ToString();
+                        comboBox_cat_de_menu.SelectedItem = reader["category_name"].ToString();
                         calories_de_menu.Text = reader["calories_menu"].ToString();
                         price_de_menu.Text = reader["price_menu"].ToString();
                         image_de_menu.Text = reader["image_menu"].ToString();
@@ -1694,7 +1729,6 @@ namespace Спроба1
                 {
                     conn.Close();
                 }
-
             }
         }
         //редагувати позицію меню
@@ -1717,13 +1751,18 @@ namespace Спроба1
             try
             {
                 conn.Open();
+                // отримання id категорії
+                string getCategoryIdQuery = "SELECT id_category FROM category WHERE category_name = @category_name";
+                MySqlCommand getCategoryIdCmd = new MySqlCommand(getCategoryIdQuery, conn);
+                getCategoryIdCmd.Parameters.AddWithValue("@category_name", category);
+                int categoryId = Convert.ToInt32(getCategoryIdCmd.ExecuteScalar());
 
                 // оновлення позиції меню
-                string updateMenuQuery = "UPDATE menu SET name_menu = @name, category_menu = @category, price_menu = @price, calories_menu = @calories, image_menu = @image " +
-                                         "WHERE id_menu = @menuId";
+                string updateMenuQuery = "UPDATE menu SET name_menu = @name, id_category = @categoryId, price_menu = @price, calories_menu = @calories, image_menu = @image " +
+                                 "WHERE id_menu = @menuId";
                 MySqlCommand cmd = new MySqlCommand(updateMenuQuery, conn);
                 cmd.Parameters.AddWithValue("@name", name);
-                cmd.Parameters.AddWithValue("@category", category);
+                cmd.Parameters.AddWithValue("@categoryId", categoryId);
                 cmd.Parameters.AddWithValue("@price", price);
                 cmd.Parameters.AddWithValue("@calories", calories);
                 cmd.Parameters.AddWithValue("@image", imagePath);
@@ -1836,19 +1875,19 @@ namespace Спроба1
         private void button_de_right_menu_Click(object sender, EventArgs e)
         {
             MoveSelectedItems(listBox5, listBox6);
-            CalculateCalories();
+            CalculateCaloriesForListBox6();
         }
 
         private void button_de_all_left_menu_Click(object sender, EventArgs e)
         {
             MoveAllItems(listBox6, listBox5);
-            CalculateCalories();
+            CalculateCaloriesForListBox6();
         }
 
         private void button_de_left_menu_Click(object sender, EventArgs e)
         {
             MoveSelectedItems(listBox6, listBox5);
-            CalculateCalories();
+            CalculateCaloriesForListBox6();
         }
 
         // рахуємо калорії для меню в полі видалення/редагування
@@ -1928,6 +1967,11 @@ namespace Спроба1
         }
 
         private void dataGridView_completed_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void calories_de_menu_TextChanged(object sender, EventArgs e)
         {
 
         }
