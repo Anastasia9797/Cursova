@@ -857,11 +857,11 @@ namespace Спроба1
             {
                 conn.Open();
                 string query = @"SELECT oc.id_orders_completed AS `ID Замовлення`, 
-                                oc.menu_id_menu AS `ID Меню`, 
-                                m.name_menu AS `Назва страви`, 
-                                c.category_name AS `Категорія`, 
-                                m.price_menu AS `Ціна`, 
-                                m.calories_menu AS `Калорійність`,
+                                IFNULL(oc.menu_id_menu, 'Цієї позиції вже немає в меню') AS `ID Меню`, 
+                                IFNULL(m.name_menu, 'Назва відсутня') AS `Назва страви`, 
+                                IFNULL(c.category_name, 'Без категорії') AS `Категорія`, 
+                                IFNULL(m.price_menu, 0) AS `Ціна`, 
+                                IFNULL(m.calories_menu, 0) AS `Калорійність`,
                                 oc.client_id_client AS `ID Клієнта`, 
                                 cl.login_client AS `Логін клієнта`, 
                                 cl.name_client AS `Ім'я клієнта`, 
@@ -875,10 +875,10 @@ namespace Спроба1
                                 oc.date_orders_in_anticipation AS `Дата замовлення`,
                                 oc.date_order_complited AS `Дата виконання`
                                 FROM orders_completed oc
-                                INNER JOIN client cl ON oc.client_id_client = cl.id_client
-                                INNER JOIN menu m ON oc.menu_id_menu = m.id_menu
+                                LEFT JOIN client cl ON oc.client_id_client = cl.id_client
+                                LEFT JOIN menu m ON oc.menu_id_menu = m.id_menu
                                 LEFT JOIN category c ON m.id_category = c.id_category
-                                INNER JOIN employees e ON oc.id_employees = e.id_employees
+                                LEFT JOIN employees e ON oc.id_employees = e.id_employees
                                 ORDER BY oc.id_orders_completed";
 
                 MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn);
@@ -1811,6 +1811,7 @@ namespace Спроба1
                 conn.Close();
             }
         }
+
         //видалити позицію
         private void del_menu_Click(object sender, EventArgs e)
         {
@@ -1823,9 +1824,15 @@ namespace Спроба1
                 {
                     conn.Open();
 
+                    // оновлення записів в orders_completed, щоб встановити для menu_id_menu NULL
+                    string updateOrdersCompletedQuery = "UPDATE orders_completed SET menu_id_menu = NULL WHERE menu_id_menu = @menuId";
+                    MySqlCommand cmd = new MySqlCommand(updateOrdersCompletedQuery, conn);
+                    cmd.Parameters.AddWithValue("@menuId", menuId);
+                    cmd.ExecuteNonQuery();
+
                     // Видалення продуктів, що входять до складу меню
                     string deleteIngredientsQuery = "DELETE FROM menu_and_products WHERE id_menu = @menuId";
-                    MySqlCommand cmd = new MySqlCommand(deleteIngredientsQuery, conn);
+                    cmd = new MySqlCommand(deleteIngredientsQuery, conn);
                     cmd.Parameters.AddWithValue("@menuId", menuId);
                     cmd.ExecuteNonQuery();
 

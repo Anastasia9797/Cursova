@@ -135,6 +135,9 @@ namespace Спроба1
             }
         }
 
+        private void Recipes_Load(object sender, EventArgs e)
+        {
 
+        }
     }
 }

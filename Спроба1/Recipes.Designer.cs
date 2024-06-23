@@ -62,6 +62,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Recipes";
             this.Text = "Recipes";
+            this.Load += new System.EventHandler(this.Recipes_Load);
             this.ResumeLayout(false);
 
         }
